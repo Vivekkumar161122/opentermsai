@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/venv/
+venv/
+env/
+.venv/
+
+# Next.js build outputs
+.next/
+frontend/.next/
+out/
+frontend/out/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment and sensitive secrets
+.env
+.env*.local
+*.env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Operating System & IDEs
+.DS_Store
+*.pem
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
