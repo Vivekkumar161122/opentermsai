@@ -1,40 +1,38 @@
-<div align="center">
+# OpenTerms AI — Agentic Legal Document Navigation & Risk Analysis
 
-# ⚖️ OpenTerms AI
-### Agentic Legal Document Navigation, Asymmetric Risk Analysis & Contract Simplification
+> Built for **PromptWars: Virtual (Exclusive Edition)** by **Hack2skill**  
+> **Challenge Theme:** *AI for Legal Assistance & Access*
 
-[![Next.js 14](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-GenAI_SDK-4285F4?style=for-the-badge&logo=google)](https://ai.google.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+OpenTerms AI is an enterprise-grade agentic GenAI legal intelligence platform built to democratize legal access by translating dense contracts into actionable, role-based insights, plain-English summaries, and attorney consultation prep-packs powered by Google Gemini.
 
-<p align="center">
-  <b>Democratizing legal access by translating dense contracts into actionable, role-based insights, plain-English summaries, and attorney consultation packs.</b>
-</p>
-
-</div>
+[![Vercel Deployment](https://img.shields.io/badge/Deploy%20with-Vercel-black?style=flat&logo=vercel)](https://vercel.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Next.js 14](https://img.shields.io/badge/Next.js-14.2-black.svg)](https://nextjs.org/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash%20%7C%201.5%20Pro-8E75B2.svg)](https://ai.google.dev/)
 
 ---
 
-## 🌟 Key Highlights
+## 🎯 Problem Statement Alignment
 
-- **🎯 Asymmetric Risk Flipping:** Dynamically evaluates contracts through your specific leverage lens (*Tenant ↔ Landlord*, *Freelancer ↔ Client*, *Employee ↔ Employer*). A covenant that protects an employer (**GREEN**) is flagged as a critical hazard (**RED**) for an employee.
-- **⚡ Split-Screen Interactive Deep-Linking:** Real-time synchronized navigation between the left document viewer and right AI intelligence drawer. Clicking any risk card smoothly scrolls to and illuminates the verbatim contract excerpt.
-- **📖 8th-Grade Plain-English Translation:** Strips archaic legal jargon (*inter alia*, uncapped indemnities, liquidated damages) into actionable, plain-language summaries.
-- **🛡️ Lawyer Consultation Prep-Pack:** Generates an executive attorney consultation briefing containing critical red flags, missing statutory protections, and pinpointed questions for legal counsel. Downloadable in Markdown (`.md`) or JSON.
-- **💬 Grounded Contract Q&A:** Multi-turn conversational legal assistant strictly grounded in the document context with zero-hallucination guardrails and clause citations.
-- **📂 Universal Ingestion:** Supports drag-and-drop ingestion of PDF, DOCX, and TXT agreements up to 25MB with structural page preservation.
+Legal documents (commercial leases, independent contractor MSAs, employment agreements) are intentionally engineered with **asymmetric leverage**. A single provision—such as uncapped indemnification, 48-hour default deposit seizure, or a 24-month worldwide non-compete—provides total protection (**GREEN**) for an enterprise, but represents an existential financial hazard (**RED**) for a tenant, freelancer, or employee. Non-lawyers cannot afford $500–$800/hr retainers just to navigate basic agreements.
+
+**OpenTerms AI addresses this by providing:**
+1. **Asymmetric Risk Inversion (Core Innovation):** Dynamically inverts risk ratings and strategies when switching between counterparty lenses (Tenant ⇄ Landlord, Freelancer ⇄ Client, Employee ⇄ Employer).
+2. **8th-Grade Plain-English Translation:** Translates dense legalese and archaic boilerplate into clear language anyone can understand.
+3. **1-Click Proposed Redlines:** Provides ready-to-negotiate contract amendments and equitable revision language with one-click clipboard copying.
+4. **Attorney Consultation Prep-Pack:** Detects missing statutory/commercial protections and auto-generates actionable checklists with pointed interrogation questions for outside counsel.
+5. **Context-Grounded Q&A:** Grounded conversation citing exact verbatim clauses with interactive deep-links into the legal document viewer.
+6. **Strict Legal Boundaries:** Built-in statutory disclaimers ensuring the tool operates strictly as an informational and navigation aid, never replacing licensed legal counsel.
 
 ---
 
 ## 🏗️ Multi-Agent Architecture
 
-```
+```text
                                   +------------------------------+
                                   |     Next.js 14 Frontend      |
-                                  |  (Split-Screen Dashboard)    |
+                                  |   (Luxury Obsidian Split)    |
                                   +--------------+---------------+
                                                  |
                        REST API Calls / Upload   |  Deep-link & Synchronized State
@@ -105,19 +103,24 @@ opentermsai/
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── layout.tsx         # Next.js root layout with dark theme
-│   │   │   ├── page.tsx           # Split-screen dashboard connecting viewer & drawer
-│   │   │   └── globals.css        # Custom scrollbars & highlight animations
+│   │   │   ├── layout.tsx         # Next.js root layout with Plus Jakarta Sans & Newsreader
+│   │   │   ├── page.tsx           # Split-screen workstation connecting viewer & drawer
+│   │   │   └── globals.css        # Obsidian styling, glassmorphism, & parchment textures
 │   │   ├── components/
-│   │   │   ├── Header.tsx         # Role selector dropdown & contract preset switcher
-│   │   │   ├── DocumentViewer.tsx # Left Pane: Document viewer with clickable highlights
-│   │   │   ├── AiInsightsDrawer.tsx # Right Pane: Summary, Risk Matrix, Q&A, Lawyer Pack
+│   │   │   ├── Header.tsx         # Role selector, flip button, preset switcher, & status
+│   │   │   ├── DocumentViewer.tsx # Left Pane: Search highlighter, match counters, & margin ribbons
+│   │   │   ├── AiInsightsDrawer.tsx # Right Pane: SVG Risk Gauge, 1-click redline, & checklist
+│   │   │   ├── ArchitectureModal.tsx # Interactive 4-agent Gemini pipeline modal
+│   │   │   ├── SettingsModal.tsx  # Live backend health test & custom API configuration
 │   │   │   ├── UploadModal.tsx    # Drag-and-drop contract uploader (under 25MB)
 │   │   │   └── FooterDisclaimer.tsx # Mandatory statutory legal disclaimer
 │   │   ├── lib/
-│   │   │   └── api.ts             # Typed REST API client for backend
+│   │   │   ├── api.ts             # Typed REST API client with zero-crash demo fallback
+│   │   │   └── demoData.ts        # Pre-computed grounded analysis for all 3 sample agreements
 │   │   └── types.ts               # TypeScript interfaces matching backend Pydantic models
+│   ├── vercel.json                # Vercel deployment configuration
 │   └── package.json               # Next.js frontend dependencies
+├── vercel.json                    # Root monorepo Vercel deployment configuration
 ├── .env.example                   # Environment variable template
 ├── .gitignore                     # Git ignore rules for Python & Node.js
 ├── pytest.ini                     # Pytest runner configuration
@@ -146,7 +149,7 @@ cp .env.example .env
 # Add your Gemini API key:
 # GEMINI_API_KEY="your-api-key"
 ```
-> *Note: OpenTerms AI comes with high-fidelity deterministic agent fallback algorithms, enabling complete functionality out of the box even without an external API key.*
+> *Note: OpenTerms AI comes with built-in high-fidelity deterministic agent fallback algorithms, enabling complete functionality out of the box even without an external API key.*
 
 ### 3. One-Click Launch
 ```bash
@@ -157,6 +160,17 @@ This automatically boots both the FastAPI backend and Next.js frontend.
 * **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
 * **Backend Swagger Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 * **Backend API Health:** [http://localhost:8000/health](http://localhost:8000/health)
+
+---
+
+## ☁️ 1-Click Vercel Deployment
+
+Deploying OpenTerms AI to Vercel is instantaneous:
+
+1. Import this repository into [Vercel](https://vercel.com).
+2. The included `vercel.json` automatically handles the Next.js build.
+3. *(Optional)* Add the `NEXT_PUBLIC_API_URL` environment variable if you host the FastAPI backend separately (e.g. on Railway, Render, or GCP Cloud Run).
+4. If deployed without a live backend, OpenTerms AI automatically activates its **Interactive Standalone Showcase Mode**, providing full risk inversion, contract Q&A, and Attorney Prep-Pack generation with zero crashes!
 
 ---
 
