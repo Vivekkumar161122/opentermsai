@@ -5,6 +5,8 @@ import { Header } from "@/components/Header";
 import { DocumentViewer } from "@/components/DocumentViewer";
 import { AiInsightsDrawer } from "@/components/AiInsightsDrawer";
 import { UploadModal } from "@/components/UploadModal";
+import { ArchitectureModal } from "@/components/ArchitectureModal";
+import { SettingsModal } from "@/components/SettingsModal";
 import { FooterDisclaimer } from "@/components/FooterDisclaimer";
 import {
   FullAnalysisOutput,
@@ -16,6 +18,8 @@ import {
   analyzeSampleDocument,
   analyzeUploadedFile,
   reanalyzePerspective,
+  checkBackendHealth,
+  getDemoPages,
 } from "@/lib/api";
 import { Loader2, AlertCircle } from "lucide-react";
 
@@ -34,54 +38,53 @@ export default function OpenTermsDashboard() {
 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(true);
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
+  const [isArchitectureOpen, setIsArchitectureOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Initialize and load default document on mount
-  useEffect(() => {
-    async function initDashboard() {
-      try {
-        setIsAnalyzing(true);
-        const sampleList = await fetchSampleDocuments();
-        setSamples(sampleList);
+  // Initialize dashboard
+  const initDashboard = async () => {
+    try {
+      setIsAnalyzing(true);
+      setErrorMessage(null);
 
-        const defaultSample = sampleList.find((s) => s.id === "commercial-lease") || sampleList[0];
-        if (defaultSample) {
-          setCurrentSampleId(defaultSample.id);
-          setCurrentPerspective(defaultSample.defaultPerspective);
-          setAvailablePerspectives(defaultSample.availablePerspectives);
+      // Check backend health asynchronously
+      const health = await checkBackendHealth();
+      setIsBackendConnected(health.ok);
 
-          const result = await analyzeSampleDocument(
-            defaultSample.id,
-            defaultSample.defaultPerspective
-          );
-          setAnalysis(result);
+      // Fetch samples (or instant local fallback)
+      const sampleList = await fetchSampleDocuments();
+      setSamples(sampleList);
 
-          // Construct default pages representation
-          // (In a full production setup with binary PDFs, PDF.js renders canvases; here we render structured page text)
-          const fallbackPages: PageText[] = [
-            {
-              pageNumber: 1,
-              text: `COMMERCIAL REAL ESTATE LEASE AGREEMENT\nBetween APEX COMMERCIAL HOLDINGS LLC ("Landlord") and METRO INNOVATIONS INC. ("Tenant").\n\n1. PREMISES & LEASE TERM\nUnit 402, 850 Market Street, San Francisco, CA. Five (5) year term.\n\n2. BASE RENT & PASS-THROUGH OPERATING EXPENSES\n$12,500.00 monthly base rent plus 100% of all CAM, insurance increases, and taxes without cap.\n\n3. SECURITY DEPOSIT & FORFEITURE\nTenant shall deposit $37,500.00 as a Security Deposit. In the event of any minor default or rent delay exceeding 48 hours, Landlord reserves the absolute right to forfeit the entire security deposit as liquidated damages without itemized accounting.`,
-            },
-            {
-              pageNumber: 2,
-              text: `4. INDEMNIFICATION & THIRD-PARTY LIABILITY\nTenant covenants and agrees to defend, indemnify, and hold harmless Landlord, its agents, contractors, and affiliates from and against any and all claims, damages, liabilities, costs, and expenses (including attorneys' fees) arising out of or related to any occurrence in or about the Premises, regardless of whether caused in part by Landlord's ordinary negligence. Tenant's liability under this section shall be uncapped and unconditional.\n\n5. LANDLORD ENTRY & INSPECTION\nLandlord, its agents, and prospective buyers or mortgagees may enter the Premises at any hour of the day or night, with or without prior notice to Tenant, to inspect the premises or exhibit the same, without abatement of rent or liability for disruption to Tenant's business operations.\n\n6. TERMINATION, DEFAULT & CURE PERIOD\nIf Tenant fails to pay rent when due or breaches any covenant herein, Landlord may terminate this Lease immediately upon three (3) days written notice. Tenant expressly waives any statutory right to notice or redemption under state law. Upon termination, all remaining rent due for the balance of the 5-year term shall accelerate and become immediately payable.`,
-            },
-          ];
-          setPages(fallbackPages);
-        }
-      } catch (err) {
-        console.error("Dashboard initialization error:", err);
-        setErrorMessage(
-          err instanceof Error
-            ? err.message
-            : "Failed to initialize OpenTerms AI. Ensure backend is running."
+      const defaultSample =
+        sampleList.find((s) => s.id === "commercial-lease") || sampleList[0];
+      if (defaultSample) {
+        setCurrentSampleId(defaultSample.id);
+        setCurrentPerspective(defaultSample.defaultPerspective);
+        setAvailablePerspectives(defaultSample.availablePerspectives);
+
+        // Fetch or get pre-computed grounded analysis
+        const result = await analyzeSampleDocument(
+          defaultSample.id,
+          defaultSample.defaultPerspective
         );
-      } finally {
-        setIsAnalyzing(false);
+        setAnalysis(result);
+        setPages(getDemoPages(defaultSample.id));
       }
+    } catch (err) {
+      console.error("Dashboard initialization error:", err);
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : "Failed to initialize OpenTerms AI."
+      );
+    } finally {
+      setIsAnalyzing(false);
     }
+  };
 
+  useEffect(() => {
     initDashboard();
   }, []);
 
@@ -100,46 +103,10 @@ export default function OpenTermsDashboard() {
       const result = await analyzeSampleDocument(sampleId, target.defaultPerspective);
       setAnalysis(result);
       setSelectedClauseId(null);
-
-      // Set corresponding pages for the chosen sample
-      if (sampleId === "freelance-msa") {
-        setPages([
-          {
-            pageNumber: 1,
-            text: `MASTER SERVICES AGREEMENT (INDEPENDENT CONTRACTOR)\nClient: NEXUS GLOBAL VENTURES INC. | Contractor: JANE DOE CONSULTING\n\n1. SCOPE OF SERVICES & PAYMENT TERMS\nCloud architecture and development services at $135.00/hr. Payment terms: Net 90 calendar days following Client's receipt of funds ("Pay-When-Paid"). No interest on late disbursements.\n\n2. INTELLECTUAL PROPERTY & WORK MADE FOR HIRE\nAll code, artifacts, and inventions shall constitute Work Made for Hire owned exclusively by Client without reservation of Contractor's pre-existing developer tooling.`,
-          },
-          {
-            pageNumber: 2,
-            text: `3. INDEMNIFICATION & THIRD-PARTY LIABILITY\nContractor shall defend, indemnify, and hold harmless Client from any third-party claims, code defects, or liabilities without any limitation of liability or fee cap.\n\n4. NON-COMPETE & RESTRICTIVE COVENANTS\nFor twenty-four (24) months post-termination, Contractor shall not directly or indirectly provide consulting or software development to any competitor in enterprise cloud or fintech worldwide.\n\n5. TERMINATION FOR CONVENIENCE\nClient may terminate at any time without cause, effective immediately upon electronic notice. Contractor must provide 60 days notice.`,
-          },
-        ]);
-      } else if (sampleId === "employment-agreement") {
-        setPages([
-          {
-            pageNumber: 1,
-            text: `EXECUTIVE EMPLOYMENT AGREEMENT\nEmployer: STRATOS AI CORP. | Executive: ALEX MERCER\n\n1. POSITION, DUTIES & AT-WILL STATUS\nVice President of Engineering. Strictly at-will employment, terminable at any time without cause or severance.\n\n2. INVENTIONS ASSIGNMENT & INTELLECTUAL PROPERTY\nExecutive assigns all inventions, algorithms, and code developed during tenure, including outside business hours.`,
-          },
-          {
-            pageNumber: 2,
-            text: `3. NON-COMPETITION & NON-SOLICITATION\n18-month non-compete within continental US and 2-year non-solicitation of employees and clients.\n\n4. GOVERNING LAW & MANDATORY ARBITRATION WAIVER\nBinding arbitration under Delaware law. Executive expressly waives jury trial and class-action participation.`,
-          },
-        ]);
-      } else {
-        // default lease
-        setPages([
-          {
-            pageNumber: 1,
-            text: `COMMERCIAL REAL ESTATE LEASE AGREEMENT\nBetween APEX COMMERCIAL HOLDINGS LLC ("Landlord") and METRO INNOVATIONS INC. ("Tenant").\n\n1. PREMISES & LEASE TERM\nUnit 402, 850 Market Street, San Francisco, CA. Five (5) year term.\n\n2. BASE RENT & PASS-THROUGH OPERATING EXPENSES\n$12,500.00 monthly base rent plus 100% of all CAM, insurance increases, and taxes without cap.\n\n3. SECURITY DEPOSIT & FORFEITURE\nTenant shall deposit $37,500.00 as a Security Deposit. In the event of any minor default or rent delay exceeding 48 hours, Landlord reserves the absolute right to forfeit the entire security deposit as liquidated damages without itemized accounting.`,
-          },
-          {
-            pageNumber: 2,
-            text: `4. INDEMNIFICATION & THIRD-PARTY LIABILITY\nTenant covenants and agrees to defend, indemnify, and hold harmless Landlord, its agents, contractors, and affiliates from and against any and all claims, damages, liabilities, costs, and expenses (including attorneys' fees) arising out of or related to any occurrence in or about the Premises, regardless of whether caused in part by Landlord's ordinary negligence. Tenant's liability under this section shall be uncapped and unconditional.\n\n5. LANDLORD ENTRY & INSPECTION\nLandlord, its agents, and prospective buyers or mortgagees may enter the Premises at any hour of the day or night, with or without prior notice to Tenant, to inspect the premises or exhibit the same, without abatement of rent or liability for disruption to Tenant's business operations.\n\n6. TERMINATION, DEFAULT & CURE PERIOD\nIf Tenant fails to pay rent when due or breaches any covenant herein, Landlord may terminate this Lease immediately upon three (3) days written notice. Tenant expressly waives any statutory right to notice or redemption under state law. Upon termination, all remaining rent due for the balance of the 5-year term shall accelerate and become immediately payable.`,
-          },
-        ]);
-      }
+      setPages(getDemoPages(sampleId));
     } catch (err) {
       setErrorMessage(
-        err instanceof Error ? err.message : "Failed to switch sample contract."
+        err instanceof Error ? err.message : "Failed to switch contract."
       );
     } finally {
       setIsAnalyzing(false);
@@ -186,7 +153,6 @@ export default function OpenTermsDashboard() {
         availablePerspectives[0];
       handlePerspectiveChange(otherRole);
     } else {
-      // Toggle generic opposing pair
       const flipMap: Record<string, string> = {
         Tenant: "Landlord",
         Landlord: "Tenant",
@@ -205,7 +171,16 @@ export default function OpenTermsDashboard() {
     setIsAnalyzing(true);
     setCurrentSampleId(null);
     setCurrentPerspective(role);
-    setAvailablePerspectives([role, role === "Tenant" ? "Landlord" : role === "Freelancer" ? "Client" : "Employer"]);
+    setAvailablePerspectives([
+      role,
+      role === "Tenant"
+        ? "Landlord"
+        : role === "Freelancer"
+        ? "Client"
+        : role === "Employee"
+        ? "Employer"
+        : "Counterparty",
+    ]);
     setErrorMessage(null);
 
     try {
@@ -213,18 +188,26 @@ export default function OpenTermsDashboard() {
       setAnalysis(result);
       setSelectedClauseId(null);
 
-      // Create page objects for viewer
+      // Create structured page representation
       const simulatedPages: PageText[] = [
         {
           pageNumber: 1,
-          text: `DOCUMENT: ${file.name}\n\nIngested and structured by OpenTerms AI IngestAgent.\n\n` +
-            result.analyzedClauses.map((c) => `[Page ${c.pageNumber}] ${c.clauseTitle}:\n${c.originalText}`).join("\n\n"),
+          text:
+            `DOCUMENT INGESTED: ${file.name}\n\nIngested and structured by OpenTerms AI IngestAgent.\n\n` +
+            result.analyzedClauses
+              .map(
+                (c) =>
+                  `[Page ${c.pageNumber}] ${c.clauseTitle}:\n${c.originalText}`
+              )
+              .join("\n\n"),
         },
       ];
       setPages(simulatedPages);
     } catch (err) {
       setErrorMessage(
-        err instanceof Error ? err.message : "Failed to analyze uploaded contract."
+        err instanceof Error
+          ? err.message
+          : "Failed to analyze uploaded contract."
       );
     } finally {
       setIsAnalyzing(false);
@@ -232,43 +215,47 @@ export default function OpenTermsDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white">
-      {/* Global Header */}
+    <div className="min-h-screen flex flex-col bg-[#030712] text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+      {/* Global Navigation Header */}
       <Header
         currentPerspective={currentPerspective}
         availablePerspectives={availablePerspectives}
         onPerspectiveChange={handlePerspectiveChange}
+        onFlipPerspective={handleFlipPerspective}
         sampleDocuments={samples}
         currentSampleId={currentSampleId}
         onSelectSample={handleSelectSample}
         onOpenUpload={() => setIsUploadOpen(true)}
+        onOpenArchitecture={() => setIsArchitectureOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        isBackendConnected={isBackendConnected}
         isAnalyzing={isAnalyzing}
       />
 
-      {/* Main Split-Screen Dashboard Content */}
-      <main className="flex-1 max-w-[1720px] w-full mx-auto p-3 sm:p-5 flex flex-col gap-4">
-        {/* Error notification if backend unavailable */}
+      {/* Main Split-Screen Dashboard Workspace */}
+      <main className="flex-1 max-w-[1780px] w-full mx-auto p-3 sm:p-5 flex flex-col gap-4">
+        {/* Error notification if any */}
         {errorMessage && (
-          <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-200 text-xs flex items-center justify-between shadow-lg">
-            <div className="flex items-center space-x-2">
+          <div className="p-3.5 rounded-2xl bg-rose-950/70 border border-rose-800 text-rose-200 text-xs flex items-center justify-between shadow-lg">
+            <div className="flex items-center space-x-2.5">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{errorMessage}</span>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-xs font-bold text-rose-300 hover:text-white"
+              className="text-xs font-bold text-rose-300 hover:text-white px-2 py-1 rounded-lg hover:bg-rose-900/50 transition"
             >
               Dismiss
             </button>
           </div>
         )}
 
-        {/* Split Screen Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-[calc(100vh-160px)]">
+        {/* Split Screen Grid (Left: Document Viewer 7 Cols, Right: AI Insights 5 Cols) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-[calc(100vh-140px)]">
           {/* Left Pane (Document Viewer): 7 Columns on Desktop */}
-          <div className="lg:col-span-7 h-[600px] lg:h-full">
+          <div className="lg:col-span-7 h-[650px] lg:h-full">
             <DocumentViewer
-              title={analysis?.documentContext.title || "Loading Contract..."}
+              title={analysis?.documentContext.title || "Loading Legal Agreement..."}
               documentType={analysis?.documentContext.documentType || "Contract Document"}
               pages={pages}
               clauses={analysis?.analyzedClauses || []}
@@ -278,7 +265,7 @@ export default function OpenTermsDashboard() {
           </div>
 
           {/* Right Pane (AI Insights Drawer): 5 Columns on Desktop */}
-          <div className="lg:col-span-5 h-[600px] lg:h-full">
+          <div className="lg:col-span-5 h-[650px] lg:h-full">
             {analysis ? (
               <AiInsightsDrawer
                 analysis={analysis}
@@ -289,13 +276,19 @@ export default function OpenTermsDashboard() {
                 isAnalyzing={isAnalyzing}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-3" />
-                <p className="text-sm font-semibold text-slate-200">
-                  Synthesizing Role-Based Risk Analysis...
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Parsing structural clauses and applying asymmetric leverage evaluation.
+              <div className="flex flex-col items-center justify-center h-full glass-panel rounded-2xl p-8 text-center text-slate-400 border border-white/[0.08]">
+                <div className="relative mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
+                  </div>
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-ping" />
+                </div>
+                <h3 className="text-sm font-bold text-white tracking-wide">
+                  Synthesizing Multi-Agent Analysis...
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                  Parsing structural clauses, checking statutory protections, and evaluating asymmetric leverage for{" "}
+                  <strong className="text-cyan-300 font-semibold">{currentPerspective}</strong>.
                 </p>
               </div>
             )}
@@ -303,15 +296,26 @@ export default function OpenTermsDashboard() {
         </div>
       </main>
 
-      {/* Mandatory Legal Disclaimer Footer */}
+      {/* Mandatory Legal Compliance Footer */}
       <FooterDisclaimer disclaimer={analysis?.disclaimer} />
 
-      {/* File Upload Modal */}
+      {/* Interactive Modals */}
       <UploadModal
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUpload={handleUploadFile}
         isUploading={isAnalyzing}
+      />
+
+      <ArchitectureModal
+        isOpen={isArchitectureOpen}
+        onClose={() => setIsArchitectureOpen(false)}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onConnectionChange={() => initDashboard()}
       />
     </div>
   );
